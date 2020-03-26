@@ -1,0 +1,41 @@
+Bootstrap: library
+From: ubuntu:18.04
+
+%environment
+  export CPATH="/usr/include/hdf5/serial/"
+  unset HDF5_PLUGIN_PATH
+
+%post
+  #  Required for add-apt-repository
+  apt -y install software-properties-common
+  #  Enable the universe PPA
+  add-apt-repository universe
+
+  apt -y update
+  apt -y install wget vim git cmake \
+    python3.6 python3-pip libhdf5-serial-dev
+
+  pip3 install numpy h5py hdf5plugin
+
+  wget https://github.com/facebook/zstd/archive/v1.0.0.tar.gz
+  tar -xvf v1.0.0.tar.gz
+  cd zstd-1.0.0/
+  make install
+  cd ..
+
+  git clone https://github.com/aparamon/HDF5Plugin-Zstandard.git zstd
+  cd zstd
+  cmake .
+  sed -i 's/aggression = ZSTD_CLEVEL_DEFAULT;/aggression = 0;/g' zstd_h5plugin.c
+  make
+  make install
+
+  cd
+  mkdir python
+  cd python/
+  mkdir compressed_files
+  cd compressed_files/
+  mkdir lz4
+  mkdir blosc
+  mkdir no
+  mkdir zstd
